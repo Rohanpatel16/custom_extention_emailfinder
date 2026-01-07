@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Icons</title>
+    <style>
+        body { background: #333; padding: 20px; }
+        .icon-container { margin: 20px; }
+        canvas { background: #000; margin: 10px; border: 1px solid #666; }
+    </style>
+</head>
+<body>
+    <div class="icon-container">
+        <canvas id="icon16" width="16" height="16"></canvas>
+        <canvas id="icon24" width="24" height="24"></canvas>
+        <canvas id="icon32" width="32" height="32"></canvas>
+        <canvas id="icon128" width="128" height="128"></canvas>
+    </div>
+    <script>
+        const sizes = [16, 24, 32, 128];
+        const svgUrl = 'icon.svg';
+
+        function loadSVG(url) {
+            return fetch(url)
+                .then(response => response.text())
+                .then(svgText => {
+                    const parser = new DOMParser();
+                    return parser.parseFromString(svgText, 'image/svg+xml');
+                });
+        }
+
+        function generateIcons() {
+            loadSVG(svgUrl).then(svgDoc => {
+                const serializer = new XMLSerializer();
+                const svgString = serializer.serializeToString(svgDoc);
+                const img = new Image();
+                
+                img.onload = () => {
+                    sizes.forEach(size => {
+                        const canvas = document.getElementById(`icon${size}`);
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, size, size);
+                        
+                        // Convert to PNG and download
+                        const link = document.createElement('a');
+                        link.download = `icon${size}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    });
+                };
+                
+                img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+            });
+        }
+
+        // Generate icons when page loads
+        window.onload = generateIcons;
+    </script>
+</body>
+</html> 

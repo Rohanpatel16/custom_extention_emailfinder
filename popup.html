@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>EmailMaster - Email & Phone Number Extractor</title>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>LinkedIn Info</h1>
+      <div class="controls-container">
+        <div class="toggle-wrapper">
+          <label class="toggle-switch">
+            <input type="checkbox" id="domainToggle">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-text">Groups</span>
+        </div>
+        <button id="copyAllBtn" class="copy-all-main-btn" title="Copy All Data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="8" y="8" width="12" height="12" rx="1" />
+            <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading-container">
+      <div class="loader"></div>
+      <span class="loading-text">Extracting data...</span>
+    </div>
+
+    <div id="error" class="error-container" style="display: none;"></div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          Email Addresses
+          <span class="count" id="emailCount">0</span>
+        </div>
+        <button id="copyAllEmailsBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="8" y="8" width="12" height="12" rx="1" />
+            <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
+          </svg>
+        </button>
+      </div>
+      <div class="section-content" id="emailList">
+        <!-- Email items will be dynamically added here -->
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">
+          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path
+              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+          </svg>
+          Phone Numbers
+          <span class="count" id="phoneCount">0</span>
+        </div>
+        <button id="copyAllPhonesBtn" class="copy-section-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="8" y="8" width="12" height="12" rx="1" />
+            <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
+          </svg>
+        </button>
+      </div>
+      <div class="section-content" id="phoneList">
+        <!-- Phone items will be dynamically added here -->
+      </div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+
+</html>

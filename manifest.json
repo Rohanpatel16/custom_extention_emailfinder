@@ -1,0 +1,34 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "images/icon128.png",
+         "16": "images/icon16.png",
+         "24": "images/icon24.png",
+         "32": "images/icon32.png"
+      },
+      "default_popup": "popup.html",
+      "default_title": "Email & Phone Number Extractor"
+   },
+   "author": "Eren Geridonmez",
+   "background": {
+      "service_worker": "background.js"
+   },
+   "description": "Easily extract email addresses and phone numbers on a web page!",
+   "icons": {
+      "16": "images/icon16.png",
+      "32": "images/icon32.png",
+      "128": "images/icon128.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3cIlPJLByR3lFtrsrOIpCAMXiwxN41plvY+Vfbp+6sPTP43kmtD7SbCxd8y8aAnOEzeB28F2lZD4wI227VvU3cl8Vpqar6TqbX+1V9LKdVoGJyTmDyEe0+XYkzlCEhlhWlj5NzpnOQREAq7LkptsgEAslj4g6YiNf8SpcRl6QA0olgCdT7j+O26qqG0/JdIirPstvnXW/zG3DuHVjLGSLtsBlIXdW6nTdPU23QRNQj5pk0isSO20sqjuPokk/T70fcSzFQCnSkubRaZVDwbG8azMoTZ7oSFfpbQNU9F5VV1X7GWiqHfiuA1+glOxJ1EFTf94PDLYyK+RAVGBsvkC3wIDAQAB",
+   "manifest_version": 3,
+   "name": "Email & Phone Number Extractor",
+   "permissions": [
+      "activeTab",
+      "contextMenus",
+      "scripting",
+      "clipboardWrite",
+      "storage"
+   ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.1.0"
+}

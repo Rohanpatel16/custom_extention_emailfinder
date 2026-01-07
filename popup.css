@@ -1,0 +1,541 @@
+:root {
+    --primary: #ACFF00;
+    --primary-glow: rgba(172, 255, 0, 0.15);
+    --background: #000000;
+    --surface: #0A0A0A;
+    --surface-hover: #141414;
+    --text-primary: #FFFFFF;
+    --text-secondary: #8A8A8A;
+    --border: #1A1A1A;
+    --nothing-dots: rgba(172, 255, 0, 0.2);
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+}
+
+body {
+    width: 320px;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background: var(--background);
+    color: var(--text-primary);
+    letter-spacing: 0.2px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    padding: 16px;
+    background: linear-gradient(180deg, #000000 0%, #050505 100%);
+}
+
+/* Header Styles */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: repeating-linear-gradient(90deg,
+            var(--nothing-dots) 0px,
+            var(--nothing-dots) 1px,
+            transparent 1px,
+            transparent 4px);
+}
+
+h1 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+
+#extractBtn {
+    background: var(--surface);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 15px var(--primary-glow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+#extractBtn:hover {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: 0 0 25px rgba(172, 255, 0, 0.3);
+}
+
+/* Section Styles */
+.section {
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    box-shadow: 0 0 15px var(--primary-glow);
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+.section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px),
+        radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px);
+    background-size: 12px 12px;
+    background-position: 0 0, 6px 6px;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10, 10, 10, 0.8);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.section-icon {
+    color: var(--primary);
+    opacity: 0.9;
+    width: 18px;
+    height: 18px;
+    transition: opacity 0.3s ease;
+}
+
+.section-title:hover .section-icon {
+    opacity: 1;
+}
+
+.count {
+    background: var(--surface);
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 400;
+    border: 1px solid var(--border);
+    margin-left: 2px;
+}
+
+.copy-all-main-btn {
+    background: #000000;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 10px rgba(172, 255, 0, 0.2);
+}
+
+.copy-all-main-btn:hover {
+    box-shadow: 0 0 15px rgba(172, 255, 0, 0.3);
+}
+
+.copy-all-main-btn svg {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.copy-all-main-btn.copied {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: 0 0 20px rgba(172, 255, 0, 0.4);
+}
+
+/* Special styling for the email copy button */
+#copyAllEmailsBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#copyAllEmailsBtn svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+    width: 20px;
+    height: 20px;
+}
+
+#copyAllEmailsBtn:hover {
+    background: var(--surface-hover);
+    color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+#copyAllEmailsBtn:hover svg {
+    transform: scale(1.05);
+    opacity: 0.8;
+}
+
+#copyAllEmailsBtn.copied {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+#copyAllEmailsBtn.copied svg {
+    animation: checkmark 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 1;
+}
+
+/* Info Item Styles */
+.section-content {
+    padding: 12px;
+}
+
+.info-item {
+    background: rgba(10, 10, 10, 0.6);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(5px);
+    position: relative;
+}
+
+.info-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px),
+        radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px);
+    background-size: 8px 8px;
+    background-position: 0 0, 4px 4px;
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.info-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: translateY(-1px);
+}
+
+.value {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.copy-button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-button:hover {
+    background: var(--surface-hover);
+    color: var(--primary);
+}
+
+.copy-button svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+}
+
+.copy-button:hover svg {
+    transform: scale(1.05);
+    opacity: 0.8;
+}
+
+.copy-button.copied {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.copy-button.copied svg {
+    animation: checkmark 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 1;
+}
+
+/* Empty State */
+.empty-state {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 24px;
+    font-size: 13px;
+    background: rgba(10, 10, 10, 0.6);
+    border-radius: 8px;
+    margin: 8px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(5px);
+}
+
+/* Loading Animation */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+
+.loader {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--surface);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.loading-text {
+    color: var(--text-secondary);
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error Container */
+.error-container {
+    color: #ff4444;
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 8px;
+    margin: 8px 0;
+    border: 1px solid rgba(255, 68, 68, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.copy-section-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.copy-section-btn:hover {
+    background: var(--surface-hover);
+    color: var(--primary);
+}
+
+.copy-section-btn svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.5;
+}
+
+.copy-section-btn:hover svg {
+    transform: scale(1.05);
+    opacity: 0.8;
+}
+
+.copy-section-btn.copied {
+    background: var(--primary);
+    color: var(--background);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.copy-section-btn.copied svg {
+    animation: checkmark 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 1;
+}
+
+/* Toggle Switch */
+.controls-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.toggle-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    display: inline-block;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--surface);
+    transition: .4s;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--text-secondary);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: rgba(172, 255, 0, 0.1);
+    border-color: var(--primary);
+}
+
+input:checked+.slider:before {
+    transform: translateX(16px);
+    background-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.toggle-wrapper:hover .toggle-text {
+    color: var(--text-primary);
+}
+
+/* Domain Group Styles */
+.domain-group {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+}
+
+.domain-header {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.domain-count {
+    background: var(--surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    border: 1px solid var(--border);
+}
+
+.domain-group .info-item {
+    margin: 0;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    border-radius: 0;
+}
+
+.domain-group .info-item:last-child {
+    border-bottom: none;
+}
+
+.domain-group .info-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+    transform: none;
+    box-shadow: none;
+}
