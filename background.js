@@ -17,3 +17,12 @@ chrome.contextMenus.onClicked.addListener((info) => {
     console.log("Extracted emails:", uniqueEmails);
   }
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "updateBadge") {
+    const count = request.count;
+    const text = count > 0 ? count.toString() : "";
+    chrome.action.setBadgeText({ tabId: sender.tab.id, text: text });
+    chrome.action.setBadgeBackgroundColor({ tabId: sender.tab.id, color: "#ACFF00" }); // Theme primary color
+  }
+});
