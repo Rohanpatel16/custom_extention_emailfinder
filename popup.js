@@ -17,14 +17,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const blacklistInput = document.getElementById("blacklistInput");
   const addBlacklistBtn = document.getElementById("addBlacklistBtn");
   const blacklistItems = document.getElementById("blacklistItems");
+  const clearCacheBtn = document.getElementById("clearCacheBtn");
+  const resetUsageBtn = document.getElementById("resetUsageBtn");
+  const usageDecisiveEl = document.getElementById("usageDecisive");
+  const usageRemainingEl = document.getElementById("usageRemaining");
+  const usageCostEl = document.getElementById("usageCost");
 
   let extractedGroups = [];
   let extractedLoosePhones = [];
   let blacklist = [];
   let isGroupingEnabled = false;
 
-  // Initialize copy buttons
+  // Initialize copy & export buttons
+  const exportCsvBtn = document.getElementById("exportCsvBtn");
+
   copyAllBtn.addEventListener("click", copyAllData);
+  if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportToCsv);
   copyAllEmailsBtn.addEventListener("click", () => copySectionData('email'));
   copyAllPhonesBtn.addEventListener("click", () => copySectionData('phone'));
 
@@ -49,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (settingsBtn) {
     settingsBtn.addEventListener("click", () => {
       settingsPanel.style.display = settingsPanel.style.display === "none" ? "block" : "none";
+      if (settingsPanel.style.display === "block") {
+        renderUsageUI();
+      }
     });
   }
   if (closeSettings) {
@@ -57,8 +68,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (addBlacklistBtn) {
-    addBlacklistBtn.addEventListener("click", addToBlacklist);
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener("click", () => {
+      if (confirm("Are you sure you want to clear all verification results?")) {
+        verificationCache = {};
+        chrome.storage.local.set({ verificationCache: {} });
+        renderData();
+        showToast("Cache Cleared");
+      }
+    });
+  }
+
+  if (resetUsageBtn) {
+    resetUsageBtn.addEventListener("click", () => {
+      if (confirm("Reset usage statistics?")) {
+        resetUsageStats();
+        showToast("Usage Stats Reset");
+      }
+    });
   }
 
   function addToBlacklist() {
@@ -70,6 +97,20 @@ document.addEventListener("DOMContentLoaded", () => {
       renderBlacklistUI();
       renderData(); // Re-render with new filter
     }
+  }
+
+  // Toast Helper
+  function showToast(message, type = 'info') {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.className = "toast show";
+    if (type === 'error') toast.classList.add("error");
+
+    setTimeout(() => {
+      toast.className = "toast";
+    }, 3500);
   }
 
   function removeFromBlacklist(domain) {
@@ -257,18 +298,48 @@ document.addEventListener("DOMContentLoaded", () => {
     topRow.style.justifyContent = "space-between";
     topRow.style.width = "100%";
     topRow.style.alignItems = "center";
+    topRow.style.gap = "8px";
 
     const emailSpan = document.createElement("div");
     emailSpan.className = "value";
     emailSpan.textContent = item.email;
     emailSpan.style.fontWeight = "500";
 
+    // Check if verified
+    let statusEl = null;
+    if (verificationCache && verificationCache[item.email]) {
+      statusEl = createStatusBadge(verificationCache[item.email]);
+    } else {
+      // Verify Button
+      statusEl = document.createElement("button");
+      statusEl.className = "verify-btn";
+      statusEl.title = "Verify Email";
+      statusEl.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+        `;
+      statusEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        verifyEmail(item.email, statusEl);
+      });
+    }
+
     const copyBtn = createCopyButton();
     const copyText = formatItemForCopy(item);
     copyBtn.addEventListener("click", () => copyToClipboard(copyText, copyBtn));
 
+    // Right side actions container
+    const actionsRight = document.createElement("div");
+    actionsRight.style.display = "flex";
+    actionsRight.style.alignItems = "center";
+    actionsRight.style.gap = "4px";
+
+    actionsRight.appendChild(statusEl);
+    actionsRight.appendChild(copyBtn);
+
     topRow.appendChild(emailSpan);
-    topRow.appendChild(copyBtn);
+    topRow.appendChild(actionsRight);
     itemDiv.appendChild(topRow);
 
     // Bottom row: Phones (if any)
@@ -423,10 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function copySectionData(type) {
     let text = "";
     if (type === 'email') {
-      // User requested to copy both email and number "like copy all button" for this section
       text = extractedGroups.map(formatItemForCopy).join('\n');
     } else if (type === 'phone') {
-      // Copy ALL unique phones found (connected + loose)
       const connected = extractedGroups.flatMap(i => i.phones);
       const all = [...connected, ...extractedLoosePhones];
       const unique = [...new Set(all)];
@@ -437,5 +506,310 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const button = type === 'email' ? copyAllEmailsBtn : copyAllPhonesBtn;
     await copyToClipboard(text, button);
+  }
+
+  function exportToCsv() {
+    if (extractedGroups.length === 0 && extractedLoosePhones.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    const rows = [["Email", "Phones", "Verification", "Quality", "Role", "Free"]];
+
+    extractedGroups.forEach(item => {
+      const phones = item.phones.join("; ");
+      let status = "Unverified";
+      let quality = "";
+      let role = "";
+      let free = "";
+
+      if (verificationCache && verificationCache[item.email]) {
+        const v = verificationCache[item.email];
+        status = v.result || "Unknown";
+        quality = v.quality || "";
+        role = v.role ? "Yes" : "No";
+        free = v.free ? "Yes" : "No";
+      }
+
+      rows.push([
+        `"${item.email}"`,
+        `"${phones}"`,
+        status,
+        quality,
+        role,
+        free
+      ]);
+    });
+
+    extractedLoosePhones.forEach(phone => {
+      rows.push(["", `"${phone}"`, "", "", "", ""]);
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "extracted_emails.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // --- Verification Logic ---
+  const apiTokenInput = document.getElementById("apiTokenInput");
+  const saveTokenBtn = document.getElementById("saveTokenBtn");
+  const verifyAllBtn = document.getElementById("verifyAllBtn");
+  let apifyToken = "";
+  // Cache for verification results
+  let verificationCache = {};
+  let usageDecisive = 0;
+  let usageFree = 0;
+
+  // Load API token & Cache
+  chrome.storage.local.get(['apifyToken', 'verificationCache', 'usageDecisive', 'usageFree'], (result) => {
+    apifyToken = result.apifyToken || ""; // Token removed for security
+    verificationCache = result.verificationCache || {};
+    usageDecisive = result.usageDecisive || 0;
+    usageFree = result.usageFree || 0;
+    renderUsageUI();
+
+    if (apiTokenInput) apiTokenInput.value = apifyToken;
+
+    // Add event listener for Verify All
+    if (verifyAllBtn) {
+      verifyAllBtn.addEventListener("click", () => {
+        const allEmails = extractedGroups.map(g => g.email);
+        verifyEmails(allEmails, verifyAllBtn);
+      });
+    }
+  });
+
+  if (saveTokenBtn) {
+    saveTokenBtn.addEventListener("click", () => {
+      const token = apiTokenInput.value.trim();
+      if (token) {
+        if (token !== apifyToken) {
+          resetUsageStats();
+          showToast("New Token: Usage Reset");
+        }
+        apifyToken = token;
+        chrome.storage.local.set({ apifyToken: token });
+        const originalText = saveTokenBtn.innerText;
+        saveTokenBtn.innerText = "Saved!";
+        setTimeout(() => saveTokenBtn.innerText = originalText, 1500);
+      }
+    });
+  }
+
+  async function verifyEmail(email, btn) {
+    if (!apifyToken) {
+      showToast("Please set Apify API Token in Settings.", "error");
+      if (settingsPanel) settingsPanel.style.display = "block";
+      return;
+    }
+
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<div class="loader" style="width:10px;height:10px;border-width:1px;"></div>`;
+    btn.disabled = true;
+
+    try {
+      const results = await runActorSync([email]);
+
+      if (results && results.length > 0) {
+        const result = results.find(r => r.email === email) || results[0];
+        updateStoredEmailStatus(email, result);
+        trackUsage(result);
+        const newBadge = createStatusBadge(result);
+        btn.replaceWith(newBadge);
+        showToast(`Verified: ${result.result}`);
+      } else {
+        throw new Error("No data returned");
+      }
+    } catch (err) {
+      console.error(err);
+      const isUsageError = err.message.includes("usage") || err.message.includes("billing");
+      if (isUsageError) {
+        showToast("Apify Usage Limit Exceeded! Check Settings.", "error");
+      } else {
+        showToast("Verification failed: " + err.message, "error");
+      }
+
+      // Restore UI
+      if (btn) {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+      }
+    }
+  }
+
+  async function verifyEmails(emails, btnToUpdate) {
+    if (!apifyToken) {
+      showToast("Please set Apify API Token in Settings.", "error");
+      if (settingsPanel) settingsPanel.style.display = "block";
+      return;
+    }
+
+    const toVerify = emails.filter(e => !verificationCache[e]);
+    if (toVerify.length === 0) {
+      showToast("All extracted emails are already verified!");
+      return;
+    }
+
+    if (!confirm(`Verify ${toVerify.length} emails? This will deduct credits ($1/1k).`)) {
+      return;
+    }
+
+    const originalText = btnToUpdate ? btnToUpdate.innerHTML : "";
+    if (btnToUpdate) {
+      btnToUpdate.innerHTML = `Verifying...`;
+      btnToUpdate.disabled = true;
+    }
+
+    // Batching to prevent timeout
+    const BATCH_SIZE = 20;
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (let i = 0; i < toVerify.length; i += BATCH_SIZE) {
+        const chunk = toVerify.slice(i, i + BATCH_SIZE);
+
+        // Update UI info if possible (optional)
+        if (btnToUpdate) btnToUpdate.innerText = `Verifying ${Math.min(i + BATCH_SIZE, toVerify.length)}/${toVerify.length}...`;
+
+        try {
+          const results = await runActorSync(chunk);
+          results.forEach(res => {
+            updateStoredEmailStatus(res.email, res);
+            trackUsage(res);
+          });
+          successCount += results.length;
+        } catch (e) {
+          console.error("Batch failed", e);
+          failedCount += chunk.length;
+          // If usage limit, stop strictly
+          if (e.message.includes("usage") || e.message.includes("billing")) {
+            throw e;
+          }
+        }
+
+        // Render progress
+        renderData();
+        // Small delay between chunks
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      showToast(`Verification Complete: ${successCount} processed.`);
+
+    } catch (err) {
+      console.error(err);
+      const isUsageError = err.message.includes("usage") || err.message.includes("billing");
+      if (isUsageError) {
+        showToast("Apify Usage Limit Exceeded!", "error");
+      } else {
+        showToast("Bulk verified with some errors.", "error");
+      }
+    } finally {
+      if (btnToUpdate) {
+        btnToUpdate.innerHTML = originalText;
+        btnToUpdate.disabled = false;
+      }
+    }
+  }
+
+  // Modified to use Sync endpoint
+  async function runActorSync(emails) {
+    // Endpoint: https://api.apify.com/v2/acts/VJ5w50TP6mAbyimyO/run-sync-get-dataset-items
+    const response = await fetch(`https://api.apify.com/v2/acts/VJ5w50TP6mAbyimyO/run-sync-get-dataset-items?token=${apifyToken}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emails: emails })
+    });
+
+    if (!response.ok) {
+      // Try to parse error
+      const errData = await response.json();
+      if (errData.error) {
+        throw new Error(errData.error.message);
+      }
+      throw new Error(`Apify Error: ${response.status} ${response.statusText}`);
+    }
+
+    // The response body IS the array of items
+    const data = await response.json();
+    return data;
+  }
+
+  // Deprecated: startApifyRun, waitForRun, getRunResults - Removed in favor of runActorSync
+
+
+  function updateStoredEmailStatus(email, resultData) {
+    verificationCache[email] = resultData;
+    chrome.storage.local.set({ verificationCache: verificationCache });
+  }
+
+  function createStatusBadge(data) {
+    const div = document.createElement("div");
+    div.className = "verification-status";
+
+    let icon = "";
+    let text = data.result;
+    let statusClass = "status-unknown";
+
+    if (data.result === "ok") {
+      statusClass = "status-valid";
+      icon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+      text = "Valid";
+    } else if (data.result === "invalid" || data.result === "error") {
+      statusClass = "status-invalid";
+      icon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
+      text = data.result === "error" ? "Error" : "Invalid";
+    } else {
+      statusClass = "status-risky";
+      icon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`;
+      text = data.result === "catch_all" ? "Catch-All" : (data.result === "disposable" ? "Disposable" : "Risky");
+    }
+
+    div.classList.add(statusClass);
+    // Tooltip
+    div.title = `Quality: ${data.quality || ''}\nResult: ${data.result}\nSub: ${data.subresult || ''}\nRole: ${data.role || ''}\nFree: ${data.free || ''}`;
+    div.innerHTML = `${icon}`;
+    // Removed inline padding to allow CSS to control sizing strictly
+    return div;
+  }
+
+  function trackUsage(result) {
+    if (!result || !result.result) return;
+    // Decisive (Paid): ok, disposable, invalid
+    if (['ok', 'disposable', 'invalid'].includes(result.result)) {
+      usageDecisive++;
+    } else {
+      // Free: catch_all, unknown, etc
+      usageFree++;
+    }
+    chrome.storage.local.set({ usageDecisive, usageFree });
+    renderUsageUI();
+  }
+
+  function resetUsageStats() {
+    usageDecisive = 0;
+    usageFree = 0;
+    chrome.storage.local.set({ usageDecisive, usageFree });
+    renderUsageUI();
+  }
+
+  function renderUsageUI() {
+    if (usageDecisiveEl) usageDecisiveEl.textContent = usageDecisive.toLocaleString();
+
+    if (usageRemainingEl) {
+      const FREE_LIMIT = 5000;
+      const remaining = Math.max(0, FREE_LIMIT - usageDecisive);
+      usageRemainingEl.textContent = remaining.toLocaleString();
+    }
+
+    if (usageCostEl) {
+      const cost = (usageDecisive / 1000) * 1;
+      usageCostEl.textContent = '$' + cost.toFixed(2);
+    }
   }
 });

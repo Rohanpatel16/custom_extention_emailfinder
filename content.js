@@ -2,7 +2,31 @@
 const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
 // Phone regex: Matches 10-13 digits, allowing for separators like space, dot, dash, plus, parenthesis
 // Note: This regex is decent but might pick up some false positives.
-const phoneRegex = /(?:[-+() ]*\d){10,13}/g;
+// Phone regex: Matches 10-15 digits, requiring valid separators or country codes to avoid prices/dates.
+// Look for optional +CountryCode, followed by digits/spacers.
+// Excludes patterns that look like prices/dates/ISOs.
+// Basic regex to find candidates, refined validation happens in JS
+const phoneRegex = /(?:\+?\d{1,4}[ -]?)?(?:\(?\d{2,5}\)?[ -]?)?\d{3,5}[ -]?\d{3,5}(?![.\d])/g;
+
+function isValidPhone(phoneStr) {
+    const clean = phoneStr.replace(/\D/g, '');
+    // 1. Length check: India pincodes are 6 digits. Phones are usually 10.
+    // Allow international 8-15.
+    if (clean.length < 8 || clean.length > 15) return false;
+
+    // 2. Year/Date check: Starts with 202x and has dash?
+    // User found "2023-001..." being detected.
+    // Refined: Only block if it looks like a year followed by dash (e.g. 2023-...)
+    // Allow local numbers starting with 202...
+    if (/^20[2-3]\d-/.test(phoneStr)) return false;
+
+    // 3. Block specific LinkedIn/Job ID patterns
+    // e.g. 3057526588 is often a job ID.
+    // Blocking 10-digit numbers starting with 305 that have NO separators.
+    if (/^305\d{7}$/.test(clean) && !/[- ]/.test(phoneStr)) return false;
+
+    return true;
+}
 
 let lastEmailCount = 0;
 let blacklist = [];
@@ -63,7 +87,7 @@ const observer = new MutationObserver(() => {
     if (timeout) clearTimeout(timeout);
     timeout = setTimeout(() => {
         updateBadge();
-    }, 1000); // Debounce 1s
+    }, 300); // Reduced to 300ms for instant feel
 });
 
 observer.observe(document.body, {
@@ -124,10 +148,14 @@ function extractGroupedData() {
                 const phones = containerText.match(phoneRegex);
 
                 if (phones && phones.length > 0) {
-                    const uniquePhones = [...new Set(phones)];
-                    phoneFound = uniquePhones;
-                    uniquePhones.forEach(p => connectedPhones.add(p));
-                    break;
+                    // Filter valid phones
+                    const validPhones = phones.filter(isValidPhone);
+                    if (validPhones.length > 0) {
+                        const uniquePhones = [...new Set(validPhones)];
+                        phoneFound = uniquePhones;
+                        uniquePhones.forEach(p => connectedPhones.add(p));
+                        break;
+                    }
                 }
 
                 container = container.parentElement;
@@ -146,7 +174,8 @@ function extractGroupedData() {
     // Find loose phones
     const allText = document.body.innerText;
     const allPhones = allText.match(phoneRegex) || [];
-    const loosePhones = [...new Set(allPhones)].filter(p => !connectedPhones.has(p));
+    // Filter loose phones too
+    const loosePhones = [...new Set(allPhones)].filter(p => !connectedPhones.has(p) && isValidPhone(p));
 
     return {
         groups: results,

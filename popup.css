@@ -16,7 +16,7 @@
 }
 
 body {
-    width: 320px;
+    width: 380px;
     margin: 0;
     padding: 0;
     font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto;
@@ -26,41 +26,82 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
 .container {
     padding: 16px;
     background: linear-gradient(180deg, #000000 0%, #050505 100%);
 }
 
-/* Header Styles */
+/* Header Styles - Split Layout */
 .header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
     position: relative;
     padding-bottom: 16px;
 }
 
-.header::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
-    height: 1px;
-    background: repeating-linear-gradient(90deg,
-            var(--nothing-dots) 0px,
-            var(--nothing-dots) 1px,
-            transparent 1px,
-            transparent 4px);
+}
+
+.branding {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-icon {
+    color: var(--primary);
+}
+
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.header-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.divider-vertical {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+    margin: 0 2px;
 }
 
 h1 {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     margin: 0;
     color: var(--text-primary);
-    letter-spacing: -0.3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 #extractBtn {
@@ -93,7 +134,7 @@ h1 {
     overflow: hidden;
     border: 1px solid var(--border);
     margin-bottom: 16px;
-    box-shadow: 0 0 15px var(--primary-glow);
+    box-shadow: 0 0 10px rgba(172, 255, 0, 0.05);
     backdrop-filter: blur(10px);
     position: relative;
 }
@@ -110,7 +151,7 @@ h1 {
         radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px);
     background-size: 12px 12px;
     background-position: 0 0, 6px 6px;
-    opacity: 0.05;
+    opacity: 0.02;
     pointer-events: none;
 }
 
@@ -155,37 +196,7 @@ h1 {
     margin-left: 2px;
 }
 
-.copy-all-main-btn {
-    background: #000000;
-    color: var(--primary);
-    border: 1px solid var(--primary);
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 10px rgba(172, 255, 0, 0.2);
-}
 
-.copy-all-main-btn:hover {
-    box-shadow: 0 0 15px rgba(172, 255, 0, 0.3);
-}
-
-.copy-all-main-btn svg {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.copy-all-main-btn.copied {
-    background: var(--primary);
-    color: var(--background);
-    box-shadow: 0 0 20px rgba(172, 255, 0, 0.4);
-}
 
 /* Special styling for the email copy button */
 #copyAllEmailsBtn {
@@ -238,17 +249,23 @@ h1 {
 }
 
 .info-item {
-    background: rgba(10, 10, 10, 0.6);
-    border-radius: 8px;
-    padding: 12px;
-    margin: 8px 0;
+    background: transparent;
+    border-radius: 0;
+    padding: 12px 16px;
+    margin: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid var(--border);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(5px);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s ease;
+    backdrop-filter: none;
     position: relative;
+    box-shadow: none;
+}
+
+.info-item:last-child {
+    border-bottom: none;
 }
 
 .info-item::before {
@@ -263,19 +280,20 @@ h1 {
         radial-gradient(circle, var(--nothing-dots) 0.5px, transparent 0.5px);
     background-size: 8px 8px;
     background-position: 0 0, 4px 4px;
-    opacity: 0.05;
+    opacity: 0.02;
     pointer-events: none;
 }
 
 .info-item:hover {
-    border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: none;
+    transform: none;
 }
 
 .value {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text-primary);
+    font-weight: 500;
     overflow-wrap: break-word;
     word-break: break-all;
     flex: 1;
@@ -287,13 +305,16 @@ h1 {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 6px;
+    padding: 4px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -307,6 +328,8 @@ h1 {
 .copy-button svg {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.5;
+    width: 14px;
+    height: 14px;
 }
 
 .copy-button:hover svg {
@@ -390,8 +413,8 @@ h1 {
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -507,7 +530,7 @@ input:checked+.slider:before {
 
 .domain-header {
     background: rgba(255, 255, 255, 0.05);
-    padding: 8px 12px;
+    padding: 6px 12px;
     font-size: 11px;
     color: var(--text-secondary);
     font-weight: 600;
@@ -533,6 +556,7 @@ input:checked+.slider:before {
     border-bottom: 1px solid var(--border);
     background: transparent;
     border-radius: 0;
+    padding: 10px 12px;
 }
 
 .domain-group .info-item:last-child {
@@ -553,9 +577,52 @@ input:checked+.slider:before {
     justify-content: center;
 }
 
+
 .icon-btn:hover {
     color: var(--primary);
     background: var(--surface-hover);
+}
+
+.icon-btn-medium {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn-medium:hover {
+    color: var(--text-primary);
+    background: var(--surface-hover);
+    border-color: var(--text-secondary);
+}
+
+.verify-btn-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verify-btn-header:hover {
+    background: rgba(172, 255, 0, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(172, 255, 0, 0.1);
 }
 
 .settings-panel {
@@ -673,4 +740,193 @@ input:checked+.slider:before {
 
 .remove-tag:hover {
     opacity: 1;
+}
+
+/* Verification Styles */
+.verify-btn,
+.verify-all-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--primary);
+    padding: 4px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.verify-btn:hover {
+    background: rgba(172, 255, 0, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.verify-all-btn:hover {
+    background: rgba(172, 255, 0, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.verify-btn svg,
+.verify-all-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Verification Status Badges */
+.verification-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 4px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-left: auto;
+}
+
+.verification-status svg {
+    width: 14px;
+    height: 14px;
+}
+
+.status-valid {
+    color: #4ade80;
+    /* Green */
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.status-invalid {
+    color: #ef4444;
+    /* Red */
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-risky {
+    color: #f59e0b;
+    /* Amber */
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-unknown {
+    color: var(--text-secondary);
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+}
+
+/* Settings Input Styling */
+.settings-section {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.settings-section label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.settings-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+.hint {
+    font-size: 10px;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 4px;
+    opacity: 0.7;
+}
+
+#saveTokenBtn {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    padding: 0 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+#saveTokenBtn:hover {
+    background: var(--primary);
+    color: var(--background);
+}
+
+#apiTokenInput {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+}
+
+#apiTokenInput:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Toast Notification */
+.toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 4px;
+    padding: 12px;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s, bottom 0.3s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+}
+
+.toast.error {
+    background-color: #ef4444;
 }

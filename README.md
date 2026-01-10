@@ -1,90 +1,94 @@
-# One-Click Contact Extractor
+# EmailMaster - Advanced Contact Extractor & Verifier
 
-A powerful Chrome Extension designed to scrape, organize, and manage contact information (Emails and Phone Numbers) from any website in real-time. It features intelligent grouping logic to associate phone numbers with their corresponding emails based on page layout, along with loose phone number detection and robust blacklist management.
+A professional Chrome Extension that extracts emails and phone numbers from any webpage, intelligently groups them by association, and verifies email validity using the Apify API. Designed for sales professionals and recruiters who need clean, verified data instantly.
 
 ![Main Interface](screenshots/main_view.png)
 
 ## 🚀 Key Features
 
-### 1. **Live Data Detection**
-- **Real-time Badge**: The extension icon displays a live counter of unique emails found on the current page.
-- **Smart Updates**: The count updates instantly as you scroll or as new content loads (e.g., infinite scrolling feeds).
-- **Blacklist Aware**: The badge count ignores emails from domains you have blacklisted.
+### 1. **Intelligent Extraction & Grouping**
+-   **Contextual Linking**: Automatically detects phone numbers located near emails in the DOM and groups them together.
+-   **Domain Grouping**: Toggle "Group by Domain" to organize results by company (e.g., all `@google.com` emails together).
+-   **Loose Phone Detection**: Numbers found on the page that aren't linked to an email are captured in a separate "Phone Numbers" section.
 
-### 2. **Intelligent Grouping & Association**
-- **Contextual Linking**: The extension doesn't just find emails; it scans the surrounding HTML structure to find phone numbers visually associated with that email.
-- **Grouped Display**: Emails and their linked phone numbers are displayed together.
-- **Unconnected Numbers**: Phone numbers found on the page that *aren't* near an email are listed separately in a "Phone Numbers" section to ensure no data is missed.
+### 2. **Built-in Email Verification**
+-   **One-Click Verify**: Verify individual emails or click **Verify All** to process the entire list.
+-   **Status Badges**:
+    *   ✅ **Valid**: Safe to send.
+    *   ❌ **Invalid/Error**: Do not send.
+    *   ⚠️ **Risky/Catch-All**: Use with caution.
+-   **Usage Tracking**:
+    *   Tracks your monthly usage of **Decisive** (Paid) vs **Free** results.
+    *   Displays your **Remaining Free Credits** (based on the standard 5,000 monthly limit) directly in Settings.
 
-### 3. **Advanced Copy & Export**
-- **Custom Formatting**: Copies data in the specific format: `email : : number` (stripping leading `+` signs from numbers).
-- **One-Click Copy**:
-  - **Copy All**: Copies every email and number found.
-  - **Copy Group**: Copies a specific domain group.
-  - **Copy Individual**: Copy just the email or just the phone number.
-- **WhatsApp Integration**: Every extracted phone number has a **Chat on WhatsApp** icon. Clicking it opens a direct chat window with that number (automatically sanitized for the API).
+### 3. **Smart Actions**
+-   **Copy**: One-click copy for emails, phones, or entire groups.
+    *   Format: `email : : phone_number` (stripping leading `+`).
+-   **WhatsApp Integration**: Click the WhatsApp icon next to any number to open a chat immediately.
+-   **CSV Export**: Download all extracted and verified data into a clean CSV file.
 
-### 4. **Blacklist System**
-- **Domain Blocking**: Built-in Settings panel to add/remove domains (e.g., `example.com`).
-- **Persistence**: Blacklist settings are saved locally and persist across sessions.
-- **Active Filtering**: Adding a domain immediately removes those emails from the list and updates the badge count.
+### 4. **Settings & Filters**
+-   **Blacklist**: Add domains (e.g., `gmail.com`) to ignore them permanently.
+-   **Auto-Reset Usage**: Updating your API Token automatically resets your usage statistics for the new billing cycle.
+-   **Dark Mode**: A beautiful, high-contrast dark theme with neon accents (`#ACFF00`) and glassmorphism effects.
 
 ![Settings Panel](screenshots/settings_view.png)
-
-### 5. **Modern UI/UX**
-- **Dark Mode**: Sleek, neon-accented dark theme.
-- **Glassmorphism**: Modern UI elements with blur effects.
-- **Responsive Text**: Handles long email addresses gracefully with smart wrapping.
 
 ---
 
 ## 🛠️ Installation
 
-1. **Clone/Download** this repository.
-2. Open Chrome and navigate to `chrome://extensions/`.
-3. Enable **Developer Mode** (toggle in the top right).
-4. Click **Load unpacked**.
-5. Select the folder containing this project.
+1.  **Download** this repository.
+2.  Open Chrome and go to `chrome://extensions/`.
+3.  Enable **Developer Mode** (top right toggle).
+4.  Click **Load unpacked**.
+5.  Select the folder containing this project.
+
+---
+
+## ⚙️ Configuration
+
+1.  Click the extension icon.
+2.  Click the **Settings (Gear)** icon in the top right.
+3.  **Apify Token**: Enter your Apify API Token to enable email verification.
+    *   *Note: Using verification costs credits on Apify ($1 per 1,000 results).*
+    *   *Free Tier allows ~5,000 verifications/month.*
+4.  **Blacklist**: Add any domains you want to hide from results.
 
 ---
 
 ## 📖 Usage Guide
 
-### The Interface
-- **Top Bar**:
-  - **Settings (Gear Icon)**: Opens the Blacklist panel.
-  - **Toggle**: Switch between "Grouped by Domain" view or a flat list.
-  - **Copy All Button**: Copies all extraction data to your clipboard.
-- **Email Addresses Section**:
-  - Lists found emails.
-  - If a phone number was found nearby in the page, it appears directly under the email.
-- **Phone Numbers Section**:
-  - Lists "Loose" phone numbers that were found on the page but could not be confidently linked to a specific email.
+### Usage Tracking
+The extension helps you stay within your budget:
+-   **Used (Decisive)**: Counts results that cost money (`Valid`, `Invalid`, `Disposable`).
+-   **Remaining (Free Tier)**: Counts down from 5,000. Shows how many more free decisive verifications you can perform this month.
+-   **Est. Cost**: Shows the real-time cost of your current session's usage.
 
-### Blacklisting Domains
-1. Click the **Gear Icon** ⚙️ in the header.
-2. Type a domain (e.g., `gmail.com` or `google.com`).
-3. Click **Add**.
-4. Extracted data from that domain will instantly be hidden.
+### Copying Data
+-   **Copy All**: Uses the clipboard icon in the top header.
+-   **Copy Group**: Uses the clipboard icon in the group header.
+-   **Copy Item**: Hover over any email or phone row to see the copy button.
 
-### Copying & Actions
-- **Copy**: Click the square icon next to any item.
-  - *Format*: `user@example.com : : 1234567890`
-- **WhatsApp**: Click the WhatsApp logo next to a phone number.
-  - *Action*: Opens `https://api.whatsapp.com/send/?phone=...`
+### Exporting
+Click the **Export CSV** button in the header to save a `.csv` file containing:
+-   Email
+-   Associated Phones
+-   Verification Status
+-   Quality Score
+-   Role / Free Status
 
 ---
 
 ## 💻 Tech Stack
-- **Manifest V3**: Compliant with the latest Chrome Extension standards.
-- **JavaScript (Vanilla)**: Lightweight and fast execution.
-- **CSS3**: Custom variables and advanced Flexbox layouts.
-- **Chrome APIs**:
-  - `chrome.runtime`: Message passing.
-  - `chrome.storage`: Saving blacklist settings.
-  - `chrome.action`: Updating the icon badge.
+-   **Manifest V3**: Secure and performant.
+-   **Vanilla JS**: No frameworks, just speed.
+-   **CSS Variables**: distinct theming.
+-   **Apify API**: For robust backend verification.
 
-## 🔒 Permissions
-- `activeTab`: To read the DOM of the current tab when the popup is opened.
-- `storage`: To save your settings (toggle state and blacklist).
-- `scripting`: To inject the extraction logic.
+---
+
+## 🔒 Privacy
+This extension operates entirely locally.
+-   Extracted data is **never** sent to any server other than the verification API (Apify) when you explicitly click "Verify".
+-   Settings are stored in `chrome.storage.local` on your machine.
