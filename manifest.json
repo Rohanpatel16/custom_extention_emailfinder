@@ -23,7 +23,7 @@
          ]
       }
    ],
-   "description": "Easily extract email addresses and phone numbers on a web page!",
+   "description": "Extract emails and phones from any website dynamically.",
    "icons": {
       "16": "images/icon16.png",
       "32": "images/icon32.png",
@@ -31,7 +31,7 @@
    },
    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3cIlPJLByR3lFtrsrOIpCAMXiwxN41plvY+Vfbp+6sPTP43kmtD7SbCxd8y8aAnOEzeB28F2lZD4wI227VvU3cl8Vpqar6TqbX+1V9LKdVoGJyTmDyEe0+XYkzlCEhlhWlj5NzpnOQREAq7LkptsgEAslj4g6YiNf8SpcRl6QA0olgCdT7j+O26qqG0/JdIirPstvnXW/zG3DuHVjLGSLtsBlIXdW6nTdPU23QRNQj5pk0isSO20sqjuPokk/T70fcSzFQCnSkubRaZVDwbG8azMoTZ7oSFfpbQNU9F5VV1X7GWiqHfiuA1+glOxJ1EFTf94PDLYyK+RAVGBsvkC3wIDAQAB",
    "manifest_version": 3,
-   "name": "Email & Phone Number Extractor",
+   "name": "One-Click Contact Extractor",
    "permissions": [
       "activeTab",
       "contextMenus",

@@ -1,4 +1,4 @@
-# Email & Phone Number Extractor
+# One-Click Contact Extractor
 
 A powerful Chrome Extension designed to scrape, organize, and manage contact information (Emails and Phone Numbers) from any website in real-time. It features intelligent grouping logic to associate phone numbers with their corresponding emails based on page layout, along with loose phone number detection and robust blacklist management.
 

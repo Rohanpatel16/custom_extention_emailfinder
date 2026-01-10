@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const emailCountBadge = document.getElementById("emailCount");
   const phoneCountBadge = document.getElementById("phoneCount");
   const domainToggle = document.getElementById("domainToggle");
-
   // Settings UI
   const settingsBtn = document.getElementById("settingsBtn");
   const settingsPanel = document.getElementById("settingsPanel");
