@@ -2,6 +2,8 @@
 
 A powerful Chrome Extension designed to scrape, organize, and manage contact information (Emails and Phone Numbers) from any website in real-time. It features intelligent grouping logic to associate phone numbers with their corresponding emails based on page layout, along with loose phone number detection and robust blacklist management.
 
+![Main Interface](screenshots/main_view.png)
+
 ## 🚀 Key Features
 
 ### 1. **Live Data Detection**
@@ -26,6 +28,8 @@ A powerful Chrome Extension designed to scrape, organize, and manage contact inf
 - **Domain Blocking**: Built-in Settings panel to add/remove domains (e.g., `example.com`).
 - **Persistence**: Blacklist settings are saved locally and persist across sessions.
 - **Active Filtering**: Adding a domain immediately removes those emails from the list and updates the badge count.
+
+![Settings Panel](screenshots/settings_view.png)
 
 ### 5. **Modern UI/UX**
 - **Dark Mode**: Sleek, neon-accented dark theme.
