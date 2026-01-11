@@ -88,6 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (addBlacklistBtn) {
+    addBlacklistBtn.addEventListener("click", addToBlacklist);
+  }
+
   function addToBlacklist() {
     const domain = blacklistInput.value.trim().toLowerCase();
     if (domain && !blacklist.includes(domain)) {
