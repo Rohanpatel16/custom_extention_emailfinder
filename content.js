@@ -6,7 +6,7 @@ const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
 // Look for optional +CountryCode, followed by digits/spacers.
 // Excludes patterns that look like prices/dates/ISOs.
 // Basic regex to find candidates, refined validation happens in JS
-const phoneRegex = /(?:\+?\d{1,4}[ -]?)?(?:\(?\d{2,5}\)?[ -]?)?\d{3,5}[ -]?\d{3,5}(?![.\d])/g;
+const phoneRegex = /(?<![\w\/._=\-])(?:\+?\d{1,4}[ -]?)?(?:\(?\d{2,5}\)?[ -]?)?\d{3,5}[ -]?\d{3,5}(?![.\d])/g;
 
 function isValidPhone(phoneStr) {
     const clean = phoneStr.replace(/\D/g, '');
