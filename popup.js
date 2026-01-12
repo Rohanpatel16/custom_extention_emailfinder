@@ -389,10 +389,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // WhatsApp Button
     const waBtn = document.createElement("a");
-    waBtn.target = "_blank";
-    // clean everything except digits for the url
     const cleanDigits = phone.replace(/\D/g, '');
-    waBtn.href = `https://api.whatsapp.com/send/?phone=${cleanDigits}&text&type=phone_number&app_absent=0`;
+    waBtn.href = "#";
+    waBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = `https://api.whatsapp.com/send/?phone=${cleanDigits}&text&type=phone_number&app_absent=0`;
+      chrome.tabs.create({ url: url, active: false });
+    });
     waBtn.className = "copy-button"; // Reuse style
     waBtn.title = "Chat on WhatsApp";
     waBtn.innerHTML = `
