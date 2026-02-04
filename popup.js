@@ -26,7 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let extractedGroups = [];
   let extractedLoosePhones = [];
   let blacklist = [];
+  let currentTabId = null;
+  let initialScrollRestored = false;
+  let storedScrollY = 0;
   let isGroupingEnabled = false;
+  let isSortAzEnabled = false;
 
   // Initialize copy & export buttons
   const exportCsvBtn = document.getElementById("exportCsvBtn");
@@ -36,10 +40,31 @@ document.addEventListener("DOMContentLoaded", () => {
   copyAllEmailsBtn.addEventListener("click", () => copySectionData('email'));
   copyAllPhonesBtn.addEventListener("click", () => copySectionData('phone'));
 
+  // Listen for updates from content script/background (real-time extraction)
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "updateBadge") {
+      // Refresh data silently
+      extractData(true);
+    }
+  });
+
   // Load settings
-  chrome.storage.local.get(['isGroupingEnabled', 'blacklist'], (result) => {
+  chrome.storage.local.get(['isGroupingEnabled', 'blacklist', 'isSortAzEnabled'], (result) => {
     isGroupingEnabled = result.isGroupingEnabled || false;
+    isSortAzEnabled = result.isSortAzEnabled || false;
+
     if (domainToggle) domainToggle.checked = isGroupingEnabled;
+
+    // Sort toggle in settings
+    const sortToggle = document.getElementById("sortToggle");
+    if (sortToggle) {
+      sortToggle.checked = isSortAzEnabled;
+      sortToggle.addEventListener("change", (e) => {
+        isSortAzEnabled = e.target.checked;
+        chrome.storage.local.set({ isSortAzEnabled: isSortAzEnabled });
+        renderData();
+      });
+    }
 
     blacklist = result.blacklist || [];
     renderBlacklistUI();
@@ -148,52 +173,75 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getFilteredGroups() {
+    return extractedGroups.filter(item => {
+      const domain = item.email.split('@')[1] || '';
+      return !blacklist.includes(domain.toLowerCase());
+    });
+  }
+
   // Start extraction automatically
   extractData();
 
-  function extractData() {
-    // Clear previous results
-    emailList.innerHTML = '';
-    phoneList.innerHTML = '';
-    loadingContainer.style.display = "flex";
-    errorContainer.style.display = "none";
-    extractedGroups = [];
-    extractedLoosePhones = [];
+  function extractData(isBackgroundUpdate = false) {
+    // Clear previous results only if not a silent update
+    if (!isBackgroundUpdate) {
+      emailList.innerHTML = '';
+      phoneList.innerHTML = '';
+      loadingContainer.style.display = "flex";
+      errorContainer.style.display = "none";
+      extractedGroups = [];
+      extractedLoosePhones = [];
+    }
 
     // Request data from content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
+      if (!activeTab) return;
+      currentTabId = activeTab.id;
 
       chrome.tabs.sendMessage(activeTab.id, { action: "getData" }, (response) => {
-        loadingContainer.style.display = "none";
+        if (!isBackgroundUpdate) {
+          loadingContainer.style.display = "none";
+        }
 
         if (chrome.runtime.lastError) {
-          showError("Please refresh the page to enable extraction.");
+          // Only show error on initial load, ignore for background updates
+          if (!isBackgroundUpdate) {
+            showError("Please refresh the page to enable extraction.");
+          }
           return;
         }
 
         if (response && response.data) {
-          // New structure: { groups: [], loosePhones: [] }
           extractedGroups = response.data.groups || [];
           extractedLoosePhones = response.data.loosePhones || [];
+
+          // Capture stored scroll ONLY on first load (not background updates)
+          if (!isBackgroundUpdate && !initialScrollRestored && response.popupScrollY !== undefined) {
+            storedScrollY = response.popupScrollY;
+          }
+
           renderData();
         } else {
-          showEmptyMessage(emailList, "No data found");
+          if (!isBackgroundUpdate) {
+            showEmptyMessage(emailList, "No data found");
+          }
         }
       });
     });
   }
 
   function renderData() {
+    // Save scroll position to prevent jumping
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
     emailList.innerHTML = '';
     phoneList.innerHTML = '';
 
     // Filter groups based on blacklist
-    // A group is an individual email item here {email, phones}
-    const filteredGroups = extractedGroups.filter(item => {
-      const domain = item.email.split('@')[1] || '';
-      return !blacklist.includes(domain.toLowerCase());
-    });
+    const filteredGroups = getFilteredGroups();
 
     // Update counts
     const totalEmails = filteredGroups.length;
@@ -213,11 +261,25 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       renderPhones();
     }
+
+    // Restore scroll position
+    if (!initialScrollRestored && storedScrollY > 0) {
+      window.scrollTo(0, storedScrollY);
+      initialScrollRestored = true;
+    } else {
+      // Maintain current scroll for live updates
+      window.scrollTo(scrollX, scrollY);
+    }
   }
 
   function renderEmails(data) {
     // If no data passed, fallback to all (though call site should pass filtered)
-    const itemsToRender = data || extractedGroups;
+    let itemsToRender = [...(data || extractedGroups)];
+
+    // Sort if enabled
+    if (isSortAzEnabled) {
+      itemsToRender.sort((a, b) => a.email.localeCompare(b.email));
+    }
 
     if (isGroupingEnabled) {
       // Group by DOMAIN
@@ -479,8 +541,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function copyAllData() {
     let fullText = "";
 
-    if (extractedGroups.length > 0) {
-      fullText += extractedGroups.map(formatItemForCopy).join('\n');
+    const filteredGroups = getFilteredGroups();
+
+    if (filteredGroups.length > 0) {
+      fullText += filteredGroups.map(formatItemForCopy).join('\n');
     }
 
     // User requested specific format. If we add Loose phones, maybe separate them?
@@ -501,9 +565,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function copySectionData(type) {
     let text = "";
     if (type === 'email') {
-      text = extractedGroups.map(formatItemForCopy).join('\n');
+      const filteredGroups = getFilteredGroups();
+      text = filteredGroups.map(formatItemForCopy).join('\n');
     } else if (type === 'phone') {
-      const connected = extractedGroups.flatMap(i => i.phones);
+      const filteredGroups = getFilteredGroups();
+      const connected = filteredGroups.flatMap(i => i.phones);
       const all = [...connected, ...extractedLoosePhones];
       const unique = [...new Set(all)];
       text = unique.map(p => p.replace(/^\+/, '')).join('\n');
@@ -522,8 +588,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const rows = [["Email", "Phones", "Verification", "Quality", "Role", "Free"]];
+    const filteredGroups = getFilteredGroups();
 
-    extractedGroups.forEach(item => {
+    filteredGroups.forEach(item => {
       const phones = item.phones.join("; ");
       let status = "Unverified";
       let quality = "";

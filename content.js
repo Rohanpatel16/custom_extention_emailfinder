@@ -98,10 +98,14 @@ observer.observe(document.body, {
 
 
 // Message listener
+let popupScrollY = 0;
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getData") {
         const data = extractGroupedData();
-        sendResponse({ data: data });
+        sendResponse({ data: data, popupScrollY: popupScrollY });
+    } else if (request.action === "savePopupScroll") {
+        popupScrollY = request.scrollY || 0;
     }
     return true;
 });
@@ -169,7 +173,7 @@ function extractGroupedData() {
         });
     });
 
-    results.sort((a, b) => a.email.localeCompare(b.email));
+    // results.sort((a, b) => a.email.localeCompare(b.email)); // Removed to preserve found order
 
     // Find loose phones
     const allText = document.body.innerText;

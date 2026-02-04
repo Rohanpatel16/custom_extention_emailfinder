@@ -112,6 +112,18 @@
       </div>
 
       <div class="settings-section">
+        <label class="toggle-switch-label"
+          style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+          <span style="font-weight: 500;">Sort Alphabetically (A-Z)</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="sortToggle">
+            <span class="slider"></span>
+          </label>
+        </label>
+        <small class="hint">If off, emails are shown in order found.</small>
+      </div>
+
+      <div class="settings-section">
         <h4>Blacklist Domains</h4>
         <div class="input-group">
           <input type="text" id="blacklistInput" placeholder="example.com">
