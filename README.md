@@ -29,6 +29,22 @@ A powerful Chrome Extension to extract emails and phone numbers from websites au
 4.  Click "Load unpacked".
 5.  Select the extension directory.
 
+## How to Update
+
+Since this extension is not in the Chrome Web Store, you will need to update it manually when a new version is released:
+
+1.  **Download & Extract**:
+    -   Download the new version ZIP file.
+    -   Right-click and select **"Extract All..."** to unzip it to a folder.
+2.  **Open Extensions Page**:
+    -   Go to `chrome://extensions/` in your browser.
+    -   Enable **"Developer mode"** in the top right corner.
+3.  **Update**:
+    -   Locate the existing extension in the list.
+    -   Click the **Remove** button to delete the old version.
+    -   Click **Load unpacked** and select the *new* folder you just extracted.
+    -   The extension is now updated!
+
 ## Usage
 
 ### Manual Mode
