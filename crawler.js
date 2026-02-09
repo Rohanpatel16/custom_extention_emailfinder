@@ -111,32 +111,6 @@ async function processNext() {
             }
         }
 
-        // --- Deep Crawl Logic ---
-        const deepLinks = await getDeepLinksFromTab(tabId);
-        log(`Scanning for sub-pages... found ${deepLinks.length} candidates.`);
-
-        if (deepLinks && deepLinks.length > 0) {
-            let addedCount = 0;
-            deepLinks.forEach(link => {
-                // Dedup against queue AND history results
-                const alreadyQueued = queue.includes(link);
-                const alreadyVisited = results.some(r => r.url === link); // Rough check
-
-                // We also need to check if we scraped it but found nothing (not in results).
-                // ideally we maintain a `visited` set.
-                // For now, let's just check queue.
-
-                if (!alreadyQueued && !alreadyVisited) {
-                    queue.push(link);
-                    addedCount++;
-                }
-            });
-            if (addedCount > 0) {
-                log(`Added ${addedCount} sub-pages to queue.`, "success");
-                updateProgress(); // Queue length changed
-            }
-        }
-
     } catch (err) {
         log(`Error: ${err.message}`, "error");
     }
@@ -187,18 +161,6 @@ function extractDataFromTab(tabId) {
                     emails: [...new Set(emails)],
                     phones: [...new Set(phones)]
                 });
-            }
-        });
-    });
-}
-
-function getDeepLinksFromTab(tabId) {
-    return new Promise((resolve) => {
-        chrome.tabs.sendMessage(tabId, { action: "getDeepLinks" }, (response) => {
-            if (chrome.runtime.lastError || !response || !response.links) {
-                resolve([]);
-            } else {
-                resolve(response.links);
             }
         });
     });

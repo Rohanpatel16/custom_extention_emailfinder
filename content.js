@@ -104,48 +104,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getData") {
         const data = extractGroupedData();
         sendResponse({ data: data, popupScrollY: popupScrollY });
-    } else if (request.action === "getDeepLinks") {
-        const links = extractDeepLinks();
-        sendResponse({ links: links });
     } else if (request.action === "savePopupScroll") {
         popupScrollY = request.scrollY || 0;
     }
     return true;
 });
-
-
-function extractDeepLinks() {
-    // Keywords for contact/career pages
-    const keywords = ["contact", "about", "career", "job", "team", "work-with-us", "touch"];
-    const links = new Set();
-
-    // Loose Check: strip www.
-    const currentDomain = window.location.hostname;
-    const baseDomain = currentDomain.replace(/^www\./, '');
-
-    document.querySelectorAll("a[href]").forEach(a => {
-        let href = a.href;
-        if (!href || href.startsWith('javascript:') || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-
-        // Browser normalizes a.href to absolute, but just in case
-        const urlLower = href.toLowerCase();
-        const text = a.innerText.toLowerCase();
-
-        // 1. Check if internal link (contains domain OR starts with /)
-        // Note: a.href is usually absolute in modern browsers
-        const isInternal = urlLower.includes(baseDomain) || href.startsWith('/');
-
-        if (!isInternal) return;
-
-        // 2. Keyword Check
-        const matchesKeyword = keywords.some(k => urlLower.includes(k) || text.includes(k));
-
-        if (matchesKeyword) {
-            links.add(href);
-        }
-    });
-    return [...links];
-}
 
 
 /**
