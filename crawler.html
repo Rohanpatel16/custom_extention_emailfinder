@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>AutoVisit Crawler</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            padding: 16px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: #ACFF00;
+        }
+
+        .status-box {
+            background: #111;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ACFF00;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .log-container {
+            flex: 1;
+            background: #050505;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 8px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .log-item {
+            margin-bottom: 4px;
+            border-bottom: 1px solid #111;
+            padding-bottom: 2px;
+        }
+
+        .log-time {
+            color: #666;
+            margin-right: 6px;
+        }
+
+        .log-msg {
+            color: #ccc;
+        }
+
+        .log-success {
+            color: #ACFF00;
+        }
+
+        .log-error {
+            color: #ff4444;
+        }
+
+        .footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        #stopBtn {
+            background: #ff4444;
+            color: #fff;
+            flex: 1;
+        }
+
+        #exportBtn {
+            background: #ACFF00;
+            color: #000;
+            flex: 1;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>AutoVisit Running...</h2>
+
+    <div class="status-box">
+        <div class="label">Current URL</div>
+        <div class="value" id="currentUrl">Initializing...</div>
+    </div>
+
+    <div class="status-box">
+        <div class="label">Progress <span id="progressText" style="float:right">0/0</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="status-box" style="display: flex; justify-content: space-between;">
+        <div>
+            <div class="label">Emails Found</div>
+            <div class="value" id="emailsMatches">0</div>
+        </div>
+        <div>
+            <div class="label">Phones Found</div>
+            <div class="value" id="phonesMatches">0</div>
+        </div>
+    </div>
+
+    <div class="label">Activity Log</div>
+    <div class="log-container" id="logContainer"></div>
+
+    <div class="footer">
+        <button id="stopBtn">Stop</button>
+        <button id="exportBtn">Export Results</button>
+    </div>
+
+    <script src="crawler.js"></script>
+</body>
+
+</html>

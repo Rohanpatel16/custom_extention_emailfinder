@@ -1,0 +1,209 @@
+// Crawler Logic
+
+// State
+let queue = [];
+let currentIndex = 0;
+let results = [];
+let isRunning = false;
+let tabId = null; // The tab we are controlling
+
+// DOM Elements
+const currentUrlEl = document.getElementById("currentUrl");
+const progressTextEl = document.getElementById("progressText");
+const progressFillEl = document.getElementById("progressFill");
+const emailsMatchesEl = document.getElementById("emailsMatches");
+const phonesMatchesEl = document.getElementById("phonesMatches");
+const logContainerEl = document.getElementById("logContainer");
+const stopBtn = document.getElementById("stopBtn");
+const exportBtn = document.getElementById("exportBtn");
+
+// Initialize
+document.addEventListener("DOMContentLoaded", async () => {
+    const data = await chrome.storage.local.get(['crawlerQueue']);
+    if (data.crawlerQueue && Array.isArray(data.crawlerQueue)) {
+        queue = data.crawlerQueue;
+        log(`Loaded ${queue.length} URLs to visit.`);
+        updateProgress();
+        startCrawler();
+    } else {
+        log("No URLs found in queue.", "error");
+    }
+});
+
+stopBtn.addEventListener("click", () => {
+    isRunning = false;
+    log("Stopping crawler...", "error");
+    stopBtn.disabled = true;
+    exportBtn.style.display = "block";
+    chrome.storage.local.set({ crawlerState: 'stopped' });
+});
+
+exportBtn.addEventListener("click", () => {
+    exportResults();
+});
+
+async function startCrawler() {
+    isRunning = true;
+
+    // Create a new tab to use for visiting sites
+    // We create it inactive so doesn't steal focus constantly, 
+    // but some sites might need focus to render.
+    chrome.tabs.create({ url: 'about:blank', active: false }, (tab) => {
+        tabId = tab.id;
+        processNext();
+    });
+}
+
+async function processNext() {
+    if (!isRunning) return;
+
+    if (currentIndex >= queue.length) {
+        log("Queue finished!", "success");
+        isRunning = false;
+        stopBtn.style.display = "none";
+        exportBtn.style.display = "block";
+        if (tabId) chrome.tabs.remove(tabId);
+        return;
+    }
+
+    let url = queue[currentIndex];
+    if (!url.startsWith('http')) url = 'https://' + url;
+
+    currentUrlEl.textContent = url;
+    updateProgress();
+    log(`Visiting: ${url}`);
+
+    try {
+        // Navigate
+        await chrome.tabs.update(tabId, { url: url });
+
+        // Wait for load
+        // Note: Real robustness requires webNavigation listeners, 
+        // but for simplicity we'll poll or wait a fixed time + reliable listener
+        await waitForLoad(tabId);
+
+        // Wait a bit for dynamic content and scroll
+        await new Promise(r => setTimeout(r, 5000));
+
+        // Extract
+        const data = await extractDataFromTab(tabId);
+
+        if (data) {
+            const emailCount = data.emails ? data.emails.length : 0;
+            const phoneCount = data.phones ? data.phones.length : 0;
+            log(`Found ${emailCount} emails, ${phoneCount} phones.`, "success");
+
+            if (emailCount > 0 || phoneCount > 0) {
+                results.push({
+                    url: url,
+                    emails: data.emails || [],
+                    phones: data.phones || []
+                });
+                updateStats();
+            }
+        }
+
+    } catch (err) {
+        log(`Error: ${err.message}`, "error");
+    }
+
+    currentIndex++;
+    // Small delay between requests
+    setTimeout(processNext, 1000);
+}
+
+function waitForLoad(tabId) {
+    return new Promise((resolve) => {
+        function listener(tid, changeInfo) {
+            if (tid === tabId && changeInfo.status === 'complete') {
+                chrome.tabs.onUpdated.removeListener(listener);
+                resolve();
+            }
+        }
+        chrome.tabs.onUpdated.addListener(listener);
+        // Timeout fallback
+        setTimeout(() => {
+            chrome.tabs.onUpdated.removeListener(listener);
+            resolve();
+        }, 15000);
+    });
+}
+
+function extractDataFromTab(tabId) {
+    return new Promise((resolve) => {
+        // We use the already injected content.js to ensure exact parity with manual extraction
+        chrome.tabs.sendMessage(tabId, { action: "getData" }, (response) => {
+            if (chrome.runtime.lastError || !response || !response.data) {
+                // Formatting error catch or no content script ready
+                console.warn("Crawler: Messaging failed or no data", chrome.runtime.lastError);
+                resolve({ emails: [], phones: [] });
+            } else {
+                // content.js returns { groups: [...], loosePhones: [...] }
+                // We need to flatten this for the crawler's simple format
+                const groups = response.data.groups || [];
+                const loosePhones = response.data.loosePhones || [];
+
+                const emails = groups.map(g => g.email);
+                // Collect phones from groups and loose ones
+                let phones = [];
+                groups.forEach(g => phones.push(...g.phones));
+                phones.push(...loosePhones);
+
+                resolve({
+                    emails: [...new Set(emails)],
+                    phones: [...new Set(phones)]
+                });
+            }
+        });
+    });
+}
+
+function updateProgress() {
+    progressTextEl.textContent = `${currentIndex + 1}/${queue.length}`;
+    const pct = ((currentIndex + 1) / queue.length) * 100;
+    progressFillEl.style.width = `${pct}%`;
+}
+
+function updateStats() {
+    const totalEmails = results.reduce((acc, r) => acc + r.emails.length, 0);
+    const totalPhones = results.reduce((acc, r) => acc + r.phones.length, 0);
+    emailsMatchesEl.textContent = totalEmails;
+    phonesMatchesEl.textContent = totalPhones;
+
+    // Auto-save to storage just in case
+    chrome.storage.local.set({ crawlerResults: results });
+}
+
+function log(msg, type = "") {
+    const div = document.createElement("div");
+    div.className = "log-item " + (type === "success" ? "log-success" : type === "error" ? "log-error" : "");
+    const time = new Date().toLocaleTimeString();
+    div.innerHTML = `<span class="log-time">[${time}]</span><span class="log-msg">${msg}</span>`;
+    logContainerEl.appendChild(div);
+    logContainerEl.scrollTop = logContainerEl.scrollHeight;
+}
+
+function exportResults() {
+    if (results.length === 0) {
+        alert("No results to export.");
+        return;
+    }
+
+    let csv = "URL,Email,Phone\n";
+    results.forEach(r => {
+        r.emails.forEach(e => {
+            csv += `"${r.url}","${e}",""\n`;
+        });
+        r.phones.forEach(p => {
+            csv += `"${r.url}","","${p}"\n`;
+        });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'crawler_results.csv';
+    document.body.appendChild(a);
+    a.click();
+}

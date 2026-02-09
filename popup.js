@@ -34,11 +34,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize copy & export buttons
   const exportCsvBtn = document.getElementById("exportCsvBtn");
+  const exportTxtBtn = document.getElementById("exportTxtBtn");
+  const exportXlsBtn = document.getElementById("exportXlsBtn");
 
   copyAllBtn.addEventListener("click", copyAllData);
   if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportToCsv);
+  if (exportTxtBtn) exportTxtBtn.addEventListener("click", exportToTxt);
+  if (exportXlsBtn) exportXlsBtn.addEventListener("click", exportToXls);
   copyAllEmailsBtn.addEventListener("click", () => copySectionData('email'));
   copyAllPhonesBtn.addEventListener("click", () => copySectionData('phone'));
+
+  // Crawler UI Logic
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  const mainView = document.getElementById("main-view");
+  const crawlerView = document.getElementById("crawler-view");
+  const startCrawlBtn = document.getElementById("startCrawlBtn");
+  const stopCrawlBtn = document.getElementById("stopCrawlBtn");
+  const crawlerUrlsInput = document.getElementById("crawlerUrls");
+
+  // Tab Switching
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      // Update active state
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // Toggle views
+      const tabName = btn.getAttribute("data-tab");
+      if (tabName === "main-view") {
+        mainView.style.display = "block";
+        crawlerView.style.display = "none";
+      } else {
+        mainView.style.display = "none";
+        crawlerView.style.display = "block";
+      }
+    });
+  });
+
+  // Start Crawler
+  startCrawlBtn.addEventListener("click", () => {
+    const urls = crawlerUrlsInput.value.trim().split("\n").filter(u => u.trim().length > 0);
+    if (urls.length === 0) {
+      alert("Please enter at least one URL.");
+      return;
+    }
+
+    // Save URLs to storage for the crawler to pick up
+    chrome.storage.local.set({ crawlerQueue: urls, crawlerState: 'running' }, () => {
+      // Open the crawler window (popup type)
+      chrome.windows.create({
+        url: 'crawler.html',
+        type: 'popup',
+        width: 450,
+        height: 600,
+        focused: true
+      });
+    });
+  });
 
   // Listen for updates from content script/background (real-time extraction)
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -624,6 +676,117 @@ document.addEventListener("DOMContentLoaded", () => {
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "extracted_emails.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function exportToTxt() {
+    if (extractedGroups.length === 0 && extractedLoosePhones.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    let content = "--- Extracted Emails and Phones ---\n\n";
+    const filteredGroups = getFilteredGroups();
+
+    filteredGroups.forEach(item => {
+      content += `Email: ${item.email}`;
+      if (item.phones.length > 0) {
+        content += ` | Phones: ${item.phones.join(", ")}`;
+      }
+      if (verificationCache && verificationCache[item.email]) {
+        content += ` [${verificationCache[item.email].result}]`;
+      }
+      content += "\n";
+    });
+
+    if (extractedLoosePhones.length > 0) {
+      content += "\n--- Loose Phones ---\n";
+      extractedLoosePhones.forEach(phone => {
+        content += `${phone}\n`;
+      });
+    }
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "extracted_data.txt");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function exportToXls() {
+    if (extractedGroups.length === 0 && extractedLoosePhones.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    let table = `
+        <table border="1">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Phones</th>
+              <th>Verification</th>
+              <th>Quality</th>
+              <th>Role</th>
+              <th>Free</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+    const filteredGroups = getFilteredGroups();
+
+    filteredGroups.forEach(item => {
+      let status = "Unverified";
+      let quality = "";
+      let role = "";
+      let free = "";
+
+      if (verificationCache && verificationCache[item.email]) {
+        const v = verificationCache[item.email];
+        status = v.result || "Unknown";
+        quality = v.quality || "";
+        role = v.role ? "Yes" : "No";
+        free = v.free ? "Yes" : "No";
+      }
+
+      table += `
+            <tr>
+              <td>${item.email}</td>
+              <td>${item.phones.join("; ")}</td>
+              <td>${status}</td>
+              <td>${quality}</td>
+              <td>${role}</td>
+              <td>${free}</td>
+            </tr>
+          `;
+    });
+
+    extractedLoosePhones.forEach(phone => {
+      table += `
+            <tr>
+              <td></td>
+              <td>${phone}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          `;
+    });
+
+    table += `</tbody></table>`;
+
+    const blob = new Blob([table], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "extracted_data.xls");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

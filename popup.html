@@ -57,140 +57,196 @@
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
+              <text x="14" y="20" font-size="8" font-weight="bold">CSV</text>
+            </svg>
+          </button>
+          <button id="exportTxtBtn" class="icon-btn-medium" title="Export TXT">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </button>
+          <button id="exportXlsBtn" class="icon-btn-medium" title="Export Excel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="8" y1="13" x2="16" y2="17"></line>
+              <line x1="16" y1="13" x2="8" y2="17"></line>
+            </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Controls -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="main-view">Extractor</button>
+      <button class="tab-btn" data-tab="crawler-view">AutoVisit</button>
+    </div>
+
+    <!-- Crawler View -->
+    <div id="crawler-view" style="display: none;">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+              <path d="M12 6v6l4 2"></path>
+            </svg>
+            Bulk URL Crawler
+          </div>
+        </div>
+        <div class="section-content">
+          <textarea id="crawlerUrls" placeholder="Paste URLs here (one per line)..."
+            style="width: 100%; height: 150px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 12px; resize: vertical; box-sizing: border-box;"></textarea>
+          <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <button id="startCrawlBtn" class="action-btn"
+              style="width: 100%; justify-content: center; background: var(--primary); color: #000;">
+              Start Automation
+            </button>
+            <button id="stopCrawlBtn" class="action-btn"
+              style="width: 100%; justify-content: center; background: #ff4444; color: #fff; display: none;">
+              Stop
+            </button>
+          </div>
+          <small class="hint" style="margin-top: 8px; display: block; color: var(--text-secondary);">Opens a helper
+            window to visit each URL.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Extractor View -->
+    <div id="main-view">
+      <div id="settingsPanel" class="settings-panel" style="display: none;">
+        <div class="settings-header">
+          <h3>Settings</h3>
+          <button id="closeSettings" class="icon-btn-small">×</button>
+        </div>
+
+        <div class="settings-section">
+          <label for="apiTokenInput">Apify API Token</label>
+          <div class="input-group">
+            <input type="password" id="apiTokenInput" placeholder="Enter Apify API Token">
+            <button id="saveTokenBtn">Save</button>
+          </div>
+          <small class="hint">Required for email verification.</small>
+        </div>
+
+        <div class="settings-section">
+          <h4>Verification Usage</h4>
+          <div class="usage-stats" style="margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Used (Decisive):</span>
+              <span id="usageDecisive" style="font-weight: 600;">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Remaining (Free Tier):</span>
+              <span id="usageRemaining" style="font-weight: 600; color: var(--primary);">5,000</span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px solid #eee; padding-top: 4px;">
+              <span>Est. Cost ($1/1k):</span>
+              <span id="usageCost" style="font-weight: 600; color: #d32f2f;">$0.00</span>
+            </div>
+          </div>
+          <small class="hint" style="display: block; margin-bottom: 8px;">Month Limit: 5,000 decisive verifications ($5
+            free
+            credit).</small>
+          <button id="resetUsageBtn" class="secondary-btn" style="width: 100%; font-size: 0.85em;">Reset Usage
+            Stats</button>
+        </div>
+
+        <div class="settings-section">
+          <label>Verification Cache</label>
+          <div class="input-group">
+            <button id="clearCacheBtn" class="secondary-btn" style="width: 100%;">Clear Verification Results</button>
+          </div>
+          <small class="hint">Clears stored statuses (Valid/Invalid, etc).</small>
+        </div>
+
+        <div class="settings-section">
+          <label class="toggle-switch-label"
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <span style="font-weight: 500;">Sort Alphabetically (A-Z)</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="sortToggle">
+              <span class="slider"></span>
+            </label>
+          </label>
+          <small class="hint">If off, emails are shown in order found.</small>
+        </div>
+
+        <div class="settings-section">
+          <h4>Blacklist Domains</h4>
+          <div class="input-group">
+            <input type="text" id="blacklistInput" placeholder="example.com">
+            <button id="addBlacklistBtn">Add</button>
+          </div>
+          <div id="blacklistItems" class="blacklist-list">
+            <!-- Items added here -->
+          </div>
+        </div>
+      </div>
+
+
+      <div id="loading" class="loading-container">
+        <div class="loader"></div>
+        <span class="loading-text">Extracting data...</span>
+      </div>
+
+      <div id="error" class="error-container" style="display: none;"></div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Email Addresses
+            <span class="count" id="emailCount">0</span>
+          </div>
+          <button id="copyAllEmailsBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="8" y="8" width="12" height="12" rx="1" />
+              <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
             </svg>
           </button>
         </div>
-      </div>
-    </div>
-
-    <!-- Settings Panel -->
-    <div id="settingsPanel" class="settings-panel" style="display: none;">
-      <div class="settings-header">
-        <h3>Settings</h3>
-        <button id="closeSettings" class="icon-btn-small">×</button>
-      </div>
-
-      <div class="settings-section">
-        <label for="apiTokenInput">Apify API Token</label>
-        <div class="input-group">
-          <input type="password" id="apiTokenInput" placeholder="Enter Apify API Token">
-          <button id="saveTokenBtn">Save</button>
+        <div class="section-content" id="emailList">
+          <!-- Email items will be dynamically added here -->
         </div>
-        <small class="hint">Required for email verification.</small>
       </div>
 
-      <div class="settings-section">
-        <h4>Verification Usage</h4>
-        <div class="usage-stats" style="margin-bottom: 8px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>Used (Decisive):</span>
-            <span id="usageDecisive" style="font-weight: 600;">0</span>
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">
+            <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+            </svg>
+            Phone Numbers
+            <span class="count" id="phoneCount">0</span>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span>Remaining (Free Tier):</span>
-            <span id="usageRemaining" style="font-weight: 600; color: var(--primary);">5,000</span>
-          </div>
-          <div
-            style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px solid #eee; padding-top: 4px;">
-            <span>Est. Cost ($1/1k):</span>
-            <span id="usageCost" style="font-weight: 600; color: #d32f2f;">$0.00</span>
-          </div>
+          <button id="copyAllPhonesBtn" class="copy-section-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="8" y="8" width="12" height="12" rx="1" />
+              <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
+            </svg>
+          </button>
         </div>
-        <small class="hint" style="display: block; margin-bottom: 8px;">Month Limit: 5,000 decisive verifications ($5
-          free
-          credit).</small>
-        <button id="resetUsageBtn" class="secondary-btn" style="width: 100%; font-size: 0.85em;">Reset Usage
-          Stats</button>
-      </div>
-
-      <div class="settings-section">
-        <label>Verification Cache</label>
-        <div class="input-group">
-          <button id="clearCacheBtn" class="secondary-btn" style="width: 100%;">Clear Verification Results</button>
-        </div>
-        <small class="hint">Clears stored statuses (Valid/Invalid, etc).</small>
-      </div>
-
-      <div class="settings-section">
-        <label class="toggle-switch-label"
-          style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-          <span style="font-weight: 500;">Sort Alphabetically (A-Z)</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="sortToggle">
-            <span class="slider"></span>
-          </label>
-        </label>
-        <small class="hint">If off, emails are shown in order found.</small>
-      </div>
-
-      <div class="settings-section">
-        <h4>Blacklist Domains</h4>
-        <div class="input-group">
-          <input type="text" id="blacklistInput" placeholder="example.com">
-          <button id="addBlacklistBtn">Add</button>
-        </div>
-        <div id="blacklistItems" class="blacklist-list">
-          <!-- Items added here -->
+        <div class="section-content" id="phoneList">
+          <!-- Phone items will be dynamically added here -->
         </div>
       </div>
     </div>
-
-
-    <div id="loading" class="loading-container">
-      <div class="loader"></div>
-      <span class="loading-text">Extracting data...</span>
-    </div>
-
-    <div id="error" class="error-container" style="display: none;"></div>
-
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">
-          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <path
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          Email Addresses
-          <span class="count" id="emailCount">0</span>
-        </div>
-        <button id="copyAllEmailsBtn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="8" y="8" width="12" height="12" rx="1" />
-            <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
-          </svg>
-        </button>
-      </div>
-      <div class="section-content" id="emailList">
-        <!-- Email items will be dynamically added here -->
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">
-          <svg class="section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <path
-              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-          </svg>
-          Phone Numbers
-          <span class="count" id="phoneCount">0</span>
-        </div>
-        <button id="copyAllPhonesBtn" class="copy-section-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="8" y="8" width="12" height="12" rx="1" />
-            <path d="M16 8V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1" />
-          </svg>
-        </button>
-      </div>
-      <div class="section-content" id="phoneList">
-        <!-- Phone items will be dynamically added here -->
-      </div>
-    </div>
-  </div>
-  <div id="toast" class="toast"></div>
-  <script src="popup.js"></script>
+    <div id="toast" class="toast"></div>
+    <script src="popup.js"></script>
 </body>
 
 </html>
