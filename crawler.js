@@ -17,6 +17,8 @@ const logContainerEl = document.getElementById("logContainer");
 const stopBtn = document.getElementById("stopBtn");
 const exportBtn = document.getElementById("exportBtn");
 
+const copyBtn = document.getElementById("copyBtn");
+
 // Initialize
 document.addEventListener("DOMContentLoaded", async () => {
     const data = await chrome.storage.local.get(['crawlerQueue']);
@@ -35,11 +37,16 @@ stopBtn.addEventListener("click", () => {
     log("Stopping crawler...", "error");
     stopBtn.disabled = true;
     exportBtn.style.display = "block";
+    copyBtn.style.display = "block";
     chrome.storage.local.set({ crawlerState: 'stopped' });
 });
 
 exportBtn.addEventListener("click", () => {
     exportResults();
+});
+
+copyBtn.addEventListener("click", () => {
+    copyResults();
 });
 
 async function startCrawler() {
@@ -62,6 +69,7 @@ async function processNext() {
         isRunning = false;
         stopBtn.style.display = "none";
         exportBtn.style.display = "block";
+        copyBtn.style.display = "block";
         if (tabId) chrome.tabs.remove(tabId);
         return;
     }
@@ -206,4 +214,49 @@ function exportResults() {
     a.download = 'crawler_results.csv';
     document.body.appendChild(a);
     a.click();
+}
+
+async function copyResults() {
+    if (results.length === 0) {
+        alert("No results to copy.");
+        return;
+    }
+
+    let textToCopy = "";
+    results.forEach(r => {
+        // MATCHING FORMAT: email : : phone1, phone2
+        r.emails.forEach(email => {
+            let line = email;
+            if (r.phones.length > 0) {
+                // Strip + from phones for consistency with popup.js
+                const cleanPhones = r.phones.map(p => p.replace(/^\+/, '')).join(", ");
+                line += " : : " + cleanPhones;
+            }
+            textToCopy += line + "\n";
+        });
+
+        // If there are phones but no emails on this page, list them? 
+        // The user request said "in same format", which usually implies email-centric.
+        // But if we have loose phones with no email, we should probably list them too or skip.
+        // For now, let's attach phones to the first email found, or list them separately if no email?
+        // Actually popup.js formatItemForCopy is 1-to-1 email to phone group. 
+        // Since crawler results are Page -> {emails, phones}, let's just dump all combinations for that page.
+
+        if (r.emails.length === 0 && r.phones.length > 0) {
+            const cleanPhones = r.phones.map(p => p.replace(/^\+/, '')).join(", ");
+            textToCopy += " : : " + cleanPhones + "\n";
+        }
+    });
+
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = "Copied!";
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 1500);
+    } catch (err) {
+        console.error("Failed to copy: ", err);
+        alert("Failed to copy to clipboard.");
+    }
 }
