@@ -104,11 +104,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getData") {
         const data = extractGroupedData();
         sendResponse({ data: data, popupScrollY: popupScrollY });
+    } else if (request.action === "getDeepLinks") {
+        const links = extractDeepLinks();
+        sendResponse({ links: links });
     } else if (request.action === "savePopupScroll") {
         popupScrollY = request.scrollY || 0;
     }
     return true;
 });
+
+function extractDeepLinks() {
+    const keywords = ["contact", "about", "career", "job", "team", "work-with-us"];
+    const links = new Set();
+    const currentDomain = window.location.hostname;
+
+    document.querySelectorAll("a[href]").forEach(a => {
+        const href = a.href;
+        const text = a.innerText.toLowerCase();
+        const urlLower = href.toLowerCase();
+
+        // Strict Domain Check: Must be same domain (or subdomain?)
+        // Let's allow subdomains for careers.
+        // Simple check: href must include currentDomain.
+        if (!href.includes(currentDomain) && !href.startsWith("/")) return;
+
+        // Keyword Check
+        const matchesKeyword = keywords.some(k => urlLower.includes(k) || text.includes(k));
+
+        if (matchesKeyword) {
+            links.add(href);
+        }
+    });
+    return [...links];
+}
 
 
 /**
