@@ -113,6 +113,8 @@ async function processNext() {
 
         // --- Deep Crawl Logic ---
         const deepLinks = await getDeepLinksFromTab(tabId);
+        log(`Scanning for sub-pages... found ${deepLinks.length} candidates.`);
+
         if (deepLinks && deepLinks.length > 0) {
             let addedCount = 0;
             deepLinks.forEach(link => {
