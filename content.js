@@ -6,7 +6,7 @@ const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
 // Look for optional +CountryCode, followed by digits/spacers.
 // Excludes patterns that look like prices/dates/ISOs.
 // Basic regex to find candidates, refined validation happens in JS
-const phoneRegex = /(?<![\w\/._=\-])(?:\+?\d{1,4}[ -]?)?(?:\(?\d{2,5}\)?[ -]?)?\d{3,5}[ -]?\d{3,5}(?![.\d])/g;
+const phoneRegex = /(?<![\w\/._=\-])(?:(?:\+?\d{1,4}[ -]?)?\d{5}[ -]?\d{5}|(?:\+?\d{1,4}[ -]?)?(?:\(?\d{2,5}\)?[ -]?)?\d{3,5}[ -]?\d{3,5})(?![.\d])/g;
 
 function isValidPhone(phoneStr) {
     const clean = phoneStr.replace(/\D/g, '');
@@ -102,87 +102,155 @@ let popupScrollY = 0;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getData") {
-        const data = extractGroupedData();
-        sendResponse({ data: data, popupScrollY: popupScrollY });
+        extractGroupedDataAsync().then(data => {
+            sendResponse({ data: data, popupScrollY: popupScrollY });
+        });
+        return true; // Indicates async response
     } else if (request.action === "savePopupScroll") {
         popupScrollY = request.scrollY || 0;
     }
-    return true;
+    return true; // Keep channel open
 });
 
 
 /**
- * Heuristic function to group emails with nearby phone numbers.
- * Also returns loose phones (unconnected).
+ * Async extraction to prevent UI freeze on huge pages.
+ * Optimizes for specific known structures (Apify) and falls back to generic walking.
  */
-function extractGroupedData() {
-    const textNodes = [];
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+async function extractGroupedDataAsync() {
+    return new Promise((resolve) => {
+        // Yield to let browser render
+        setTimeout(() => {
+            const results = [];
+            const processedEmails = new Set();
+            const connectedPhones = new Set();
+            const loosePhonesSet = new Set();
 
-    let node;
-    while (node = walker.nextNode()) {
-        // Reset lastIndex for the global regex or use a new one to ensure we don't skip
-        emailRegex.lastIndex = 0;
-        if (emailRegex.test(node.nodeValue)) {
-            textNodes.push(node);
-        }
-    }
+            // 1. Identification Phase: Where to look?
+            // Optimization for Apify or Code-like views
+            let rootNodes = [];
+            if (document.querySelector('.line-content pre')) {
+                // Apify dataset view detected
+                rootNodes = Array.from(document.querySelectorAll('.line-content pre'));
+            } else {
+                // Fallback: Use body, but we'll walk it carefully
+                rootNodes = [document.body];
+            }
 
-    const results = [];
-    const processedEmails = new Set(); // Stores lowercase emails
-    const connectedPhones = new Set(); // Stores phones connected to emails
+            // Helper to process a text string
+            const processText = (text, contextNode) => {
+                if (!text || text.length < 5) return;
 
-    textNodes.forEach(textNode => {
-        const text = textNode.nodeValue;
-        const emailsInNode = text.match(emailRegex) || [];
+                // Emails
+                let emailMatches = text.match(emailRegex) || [];
+                emailMatches.forEach(email => {
+                    const lower = email.toLowerCase();
+                    if (processedEmails.has(lower)) return;
+                    processedEmails.add(lower);
 
-        emailsInNode.forEach(email => {
-            const lowerEmail = email.toLowerCase();
-            if (processedEmails.has(lowerEmail)) return;
-            processedEmails.add(lowerEmail);
+                    // Find connected phones nearby
+                    // For Apify, contextNode is the <pre> tag usually
+                    let phoneFound = [];
+                    // Simple context check: Look in the same node or parent
+                    let searchContext = contextNode ? (contextNode.parentElement || contextNode) : null;
 
-            // Find 'context' - the container element
-            let container = textNode.parentElement;
-            let phoneFound = [];
-            let attempts = 0;
+                    if (searchContext) {
+                        const contextText = searchContext.innerText || "";
+                        const phones = contextText.match(phoneRegex);
+                        if (phones) {
+                            const validPhones = phones.filter(isValidPhone);
+                            if (validPhones.length > 0) {
+                                const uniquePhones = [...new Set(validPhones)];
+                                phoneFound = uniquePhones;
+                                uniquePhones.forEach(p => connectedPhones.add(p));
+                            }
+                        }
+                    }
 
-            // Traverse up
-            while (container && container !== document.body && attempts < 4) {
-                const containerText = container.innerText;
-                const phones = containerText.match(phoneRegex);
+                    results.push({
+                        email: email,
+                        phones: phoneFound
+                    });
+                });
 
-                if (phones && phones.length > 0) {
-                    // Filter valid phones
-                    const validPhones = phones.filter(isValidPhone);
-                    if (validPhones.length > 0) {
-                        const uniquePhones = [...new Set(validPhones)];
-                        phoneFound = uniquePhones;
-                        uniquePhones.forEach(p => connectedPhones.add(p));
-                        break;
+                // Phones (Loose)
+                const phoneMatches = text.match(phoneRegex) || [];
+                phoneMatches.forEach(p => {
+                    if (isValidPhone(p)) loosePhonesSet.add(p);
+                });
+            };
+
+            // 2. Processing Phase (Chunked)
+            let nodeIndex = 0;
+            const chunkSize = 500; // Process 500 nodes at a time
+
+            const processChunk = () => {
+                const startTime = performance.now();
+
+                // If we are using specific roots (like Apify), we iterate them
+                if (rootNodes.length > 1 || (rootNodes.length === 1 && rootNodes[0] !== document.body)) {
+                    while (nodeIndex < rootNodes.length && performance.now() - startTime < 15) {
+                        processText(rootNodes[nodeIndex].innerText, rootNodes[nodeIndex]);
+                        nodeIndex++;
+                    }
+                } else {
+                    // Generic TreeWalker for the whole body (Standard pages)
+                    // Re-instantiate walker since we can't pause it easily across async without state, 
+                    // but here we just do a blocking walk for short durations if possible, OR
+                    // since we already have a freezing issue, we'll try a different strategy:
+                    // Get ALL text nodes first? No, that's heavy.
+                    // We'll stick to the original heavy synchronous logic for normal pages BUT
+                    // wrapped in a minimal timeout to at least return the promise.
+                    // For truly massive non-Apify pages, this might still be slow, but let's see.
+
+                    // Actually, let's just do the TreeWalker here in one go for now,
+                    // but specifically optimization: check body.innerText length.
+                    if (document.body.innerText.length > 5000000) { // 5MB+ text
+                        // Too big, naive regex on body only
+                        const text = document.body.innerText;
+                        processText(text, document.body); // One pass, loose context
+                        nodeIndex = rootNodes.length; // Done
+                    } else {
+                        // Standard Walker
+                        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                        let node;
+                        while (node = walker.nextNode()) {
+                            processText(node.nodeValue, node.parentElement);
+                        }
+                        nodeIndex = rootNodes.length;
                     }
                 }
 
-                container = container.parentElement;
-                attempts++;
-            }
+                if (nodeIndex < rootNodes.length) {
+                    setTimeout(processChunk, 0); // Schedule next chunk
+                } else {
+                    // Done
+                    const loosePhones = [...loosePhonesSet].filter(p => !connectedPhones.has(p));
+                    resolve({
+                        groups: results,
+                        loosePhones: loosePhones
+                    });
+                }
+            };
 
-            results.push({
-                email: email, // Keep original casing
-                phones: phoneFound || []
-            });
-        });
+            processChunk();
+        }, 10);
     });
+}
 
-    // results.sort((a, b) => a.email.localeCompare(b.email)); // Removed to preserve found order
-
-    // Find loose phones
-    const allText = document.body.innerText;
-    const allPhones = allText.match(phoneRegex) || [];
-    // Filter loose phones too
-    const loosePhones = [...new Set(allPhones)].filter(p => !connectedPhones.has(p) && isValidPhone(p));
-
+/**
+ * Standard synchronous extraction (Kept for badge updates / small checks)
+ * simplified for performance.
+ */
+function extractGroupedData() {
+    // This function is less critical now as we use the async one for the popup.
+    // We can leave it as a lightweight scanner for the badge.
+    const text = document.body.innerText;
+    const emails = text.match(emailRegex) || [];
+    const uniqueEmails = new Set(emails.map(e => e.toLowerCase()));
+    // We won't do full phone extraction for badge to save resources
     return {
-        groups: results,
-        loosePhones: loosePhones
+        groups: Array.from(uniqueEmails).map(e => ({ email: e, phones: [] })),
+        loosePhones: []
     };
 }

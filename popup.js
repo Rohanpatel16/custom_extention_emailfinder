@@ -247,12 +247,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Request data from content script
+    // Request data from content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
-      if (!activeTab) return;
+      if (!activeTab) {
+        loadingContainer.style.display = "none";
+        return;
+      }
       currentTabId = activeTab.id;
 
+      // Timeout fallback to hide loader
+      const loaderTimeout = setTimeout(() => {
+        if (loadingContainer.style.display !== "none") {
+          loadingContainer.style.display = "none";
+          // If we have some data from background update, we might be fine, otherwise show error
+          if (extractedGroups.length === 0 && extractedLoosePhones.length === 0) {
+            showError("Extraction timed out. Page might be too large.");
+          }
+        }
+      }, 5000); // 5s timeout
+
       chrome.tabs.sendMessage(activeTab.id, { action: "getData" }, (response) => {
+        clearTimeout(loaderTimeout);
         if (!isBackgroundUpdate) {
           loadingContainer.style.display = "none";
         }
@@ -260,7 +276,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (chrome.runtime.lastError) {
           // Only show error on initial load, ignore for background updates
           if (!isBackgroundUpdate) {
-            showError("Please refresh the page to enable extraction.");
+            console.warn("Runtime error:", chrome.runtime.lastError);
+            // Don't show error if we just timed out, avoiding double error
+            if (errorContainer.style.display === "none") {
+              showError("Please refresh the page to enable extraction.");
+            }
           }
           return;
         }
